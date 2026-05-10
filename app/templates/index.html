@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>最新发布</h1>
+{% for entry in entries %}
+<article>
+  <h2>{{ entry.title }}</h2>
+  <p>{{ entry.one_sentence_takeaway }}</p>
+  <p>{{ entry.traffic_date }} / Rank {{ entry.view_rank }}</p>
+</article>
+{% endfor %}
+{% endblock %}

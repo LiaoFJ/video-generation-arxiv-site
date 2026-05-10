@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ archive_date }}</h1>
+{% for entry in entries %}
+<article>
+  <a href="/papers/{{ archive_date }}/{{ entry.slug }}">{{ entry.title }}</a>
+</article>
+{% endfor %}
+{% endblock %}
