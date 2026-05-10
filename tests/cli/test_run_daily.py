@@ -1,5 +1,9 @@
+import json
+
 from app.arxiv.models import RankedPaper
-from app.cli import build_publish_plan, run_daily_job
+from app.cli import build_publish_plan, collect_ranked_papers, run_daily_job, run_live_daily_job
+from app.config import Settings
+from app.pipeline.schemas import SummaryResult
 
 
 def test_build_publish_plan_limits_and_sorts_ranked_papers():
@@ -79,3 +83,105 @@ def test_run_daily_job_publishes_only_limited_papers():
     )
 
     assert published == ["2505.00001"]
+
+
+def test_collect_ranked_papers_filters_and_dedupes():
+    html = """
+    <ol>
+      <li>
+        <a href="/abs/2505.00001">Paper A</a>
+        <span class="category">cs.CV</span>
+      </li>
+    </ol>
+    """
+    xml_text = """<?xml version="1.0" encoding="UTF-8"?>
+    <feed xmlns="http://www.w3.org/2005/Atom">
+      <entry>
+        <id>http://arxiv.org/abs/2505.00001v1</id>
+        <published>2026-05-08T00:00:00Z</published>
+        <title>Paper A</title>
+        <summary>text-to-video generation</summary>
+        <author><name>Ada</name></author>
+        <category term="cs.CV" />
+      </entry>
+    </feed>
+    """
+
+    class FakeClient:
+        def __init__(self):
+            self.ranking_urls = []
+
+        def fetch_ranking_html(self, url: str) -> str:
+            self.ranking_urls.append(url)
+            return html
+
+        def fetch_metadata(self, ranking_lookup):
+            from app.arxiv.client import parse_arxiv_api_response
+
+            return parse_arxiv_api_response(xml_text, ranking_lookup)
+
+    settings = Settings(
+        ARXIV_RANKING_URL_TEMPLATE="https://example.com/{category}?date={date}",
+        CONTENT_ROOT="content",
+    )
+
+    papers = collect_ranked_papers(settings, FakeClient(), "2026-05-09")
+
+    assert len(papers) == 1
+    assert papers[0].arxiv_id == "2505.00001"
+
+
+def test_run_live_daily_job_writes_content(tmp_path):
+    paper = RankedPaper(
+        arxiv_id="2505.00001",
+        title="Paper A",
+        summary="text-to-video generation",
+        source_url="https://arxiv.org/abs/2505.00001",
+        pdf_url="https://arxiv.org/pdf/2505.00001.pdf",
+        primary_category="cs.CV",
+        categories=["cs.CV"],
+        authors=["Ada"],
+        published_at="2026-05-08T00:00:00Z",
+        traffic_date="2026-05-09",
+        view_rank=1,
+        view_count=100,
+    )
+
+    class FakeClient:
+        def fetch_ranking_html(self, url: str) -> str:
+            return ""
+
+        def fetch_metadata(self, ranking_lookup):
+            return [paper]
+
+        def download_pdf(self, pdf_url: str) -> bytes:
+            return b"%PDF-1.4 fake"
+
+    class FakeSummarizer:
+        def summarize_paper(self, paper, pdf_text: str):
+            return SummaryResult(
+                summary_zh="中文摘要",
+                one_sentence_takeaway="一句话结论",
+                method_highlights=["亮点"],
+                applications=["应用"],
+                limitations=["局限"],
+            )
+
+    settings = Settings(
+        CONTENT_ROOT=str(tmp_path),
+        OPENAI_API_KEY="test-key",
+        ARXIV_RANKING_URL_TEMPLATE="https://example.com/{category}?date={date}",
+    )
+
+    count = run_live_daily_job(
+        settings=settings,
+        arxiv_client=FakeClient(),
+        summarizer=FakeSummarizer(),
+        archive_date="2026-05-10",
+        traffic_date="2026-05-09",
+        pdf_text_extractor=lambda _: "fake pdf text",
+    )
+
+    detail = json.loads((tmp_path / "2026-05-10" / "2505-00001.json").read_text(encoding="utf-8"))
+    assert count == 1
+    assert detail["summary_zh"] == "中文摘要"
