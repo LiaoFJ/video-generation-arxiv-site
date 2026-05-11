@@ -20,5 +20,5 @@ class Settings(BaseSettings):
     ranking_url_template: str | None = Field(default=None, alias="RANKING_URL_TEMPLATE")
     request_timeout_seconds: float = Field(default=30.0, alias="REQUEST_TIMEOUT_SECONDS")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
-    openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
-    openai_model: str = Field(default="gpt-5.2", alias="OPENAI_MODEL")
+    openai_base_url: str = Field(default="https://api.deepseek.com", alias="OPENAI_BASE_URL")
+    openai_model: str = Field(default="deepseek-v4-flash", alias="OPENAI_MODEL")

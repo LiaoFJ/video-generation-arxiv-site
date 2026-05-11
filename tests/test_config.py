@@ -15,3 +15,5 @@ def test_settings_defaults(tmp_path, monkeypatch):
         "image-to-video",
         "video diffusion",
     ]
+    assert settings.openai_base_url == "https://api.deepseek.com"
+    assert settings.openai_model == "deepseek-v4-flash"
