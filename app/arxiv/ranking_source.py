@@ -4,6 +4,29 @@ from app.arxiv.models import RankedPaper
 
 
 def parse_ranking_html(html: str, traffic_date: str) -> list[RankedPaper]:
+    hf_matches = list(re.finditer(r'<h3\b[^>]*>\s*<a\b[^>]*href=["\']/papers/([^"\']+)["\'][^>]*>\s*([^<]+?)\s*</a>\s*</h3>', html, re.I | re.S))
+    if hf_matches:
+        papers: list[RankedPaper] = []
+        for index, match in enumerate(hf_matches, start=1):
+            arxiv_id, title = match.group(1), match.group(2)
+            papers.append(
+                RankedPaper(
+                    arxiv_id=arxiv_id.strip(),
+                    title=title.strip(),
+                    summary="",
+                    source_url=f"https://arxiv.org/abs/{arxiv_id.strip()}",
+                    pdf_url=f"https://arxiv.org/pdf/{arxiv_id.strip()}.pdf",
+                    primary_category="",
+                    categories=[],
+                    authors=[],
+                    published_at="",
+                    traffic_date=traffic_date,
+                    view_rank=index,
+                    view_count=None,
+                )
+            )
+        return papers
+
     papers: list[RankedPaper] = []
 
     li_matches = re.finditer(r"<li\b[^>]*>(.*?)</li>", html, re.I | re.S)

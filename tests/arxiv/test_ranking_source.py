@@ -37,3 +37,16 @@ def test_parse_ranking_html_accepts_common_html_variants():
     assert len(papers) == 1
     assert papers[0].arxiv_id == "2505.00003"
     assert papers[0].primary_category == "cs.LG"
+
+
+def test_parse_ranking_html_extracts_huggingface_daily_papers():
+    html = """
+    <h3><a href="/papers/2505.00001">Paper A</a></h3>
+    <p>Something else</p>
+    <h3><a href="/papers/2505.00002">Paper B</a></h3>
+    """
+
+    papers = parse_ranking_html(html, traffic_date="2026-05-09")
+
+    assert [paper.arxiv_id for paper in papers] == ["2505.00001", "2505.00002"]
+    assert papers[0].view_rank == 1

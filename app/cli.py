@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-from app.arxiv.client import ArxivClient, build_ranking_url
+from app.arxiv.client import ArxivClient, build_ranking_url, resolve_ranking_date
 from app.arxiv.filtering import is_relevant_paper
 from app.arxiv.models import RankedPaper
 from app.arxiv.ranking_source import parse_ranking_html
@@ -30,27 +30,32 @@ def build_slug(arxiv_id: str) -> str:
 
 
 def collect_ranked_papers(settings: Settings, arxiv_client: ArxivClient, traffic_date: str) -> list[RankedPaper]:
-    if not settings.ranking_url_template:
-        raise ValueError("ARXIV_RANKING_URL_TEMPLATE is required for live ranking fetches.")
-
     ranking_lookup: dict[str, dict] = {}
-    for category in settings.categories:
-        ranking_url = build_ranking_url(category=category, traffic_date=traffic_date, template=settings.ranking_url_template)
-        html = arxiv_client.fetch_ranking_html(ranking_url)
-        ranked_entries = parse_ranking_html(html, traffic_date=traffic_date)
-        for entry in ranked_entries:
-            existing = ranking_lookup.get(entry.arxiv_id)
-            candidate = {
-                "traffic_date": entry.traffic_date,
-                "view_rank": entry.view_rank,
-                "view_count": entry.view_count,
-                "source_category": category,
-            }
-            if existing is None or entry.view_rank < existing["view_rank"]:
-                ranking_lookup[entry.arxiv_id] = candidate
+    template = settings.ranking_url_template
+    resolved_traffic_date, html = resolve_ranking_date(
+        traffic_date,
+        lambda candidate_date: arxiv_client.fetch_ranking_html(
+            build_ranking_url(category=settings.categories[0], traffic_date=candidate_date, template=template)
+        ),
+        max_backtrack_days=3,
+    )
+    ranked_entries = parse_ranking_html(html, traffic_date=resolved_traffic_date)
+    for entry in ranked_entries:
+        ranking_lookup[entry.arxiv_id] = {
+            "traffic_date": entry.traffic_date,
+            "view_rank": entry.view_rank,
+            "view_count": entry.view_count,
+            "source_category": "",
+        }
 
     metadata_papers = arxiv_client.fetch_metadata(ranking_lookup)
-    return [paper for paper in metadata_papers if is_relevant_paper(paper, settings.keywords)]
+    filtered_papers = [
+        paper
+        for paper in metadata_papers
+        if any(category in settings.categories for category in paper.categories)
+        and is_relevant_paper(paper, settings.keywords)
+    ]
+    return filtered_papers
 
 
 def run_live_daily_job(

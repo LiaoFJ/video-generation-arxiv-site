@@ -87,12 +87,7 @@ def test_run_daily_job_publishes_only_limited_papers():
 
 def test_collect_ranked_papers_filters_and_dedupes():
     html = """
-    <ol>
-      <li>
-        <a href="/abs/2505.00001">Paper A</a>
-        <span class="category">cs.CV</span>
-      </li>
-    </ol>
+    <h3><a href="/papers/2505.00001">Paper A</a></h3>
     """
     xml_text = """<?xml version="1.0" encoding="UTF-8"?>
     <feed xmlns="http://www.w3.org/2005/Atom">
@@ -121,7 +116,6 @@ def test_collect_ranked_papers_filters_and_dedupes():
             return parse_arxiv_api_response(xml_text, ranking_lookup)
 
     settings = Settings(
-        ARXIV_RANKING_URL_TEMPLATE="https://example.com/{category}?date={date}",
         CONTENT_ROOT="content",
     )
 
@@ -149,7 +143,7 @@ def test_run_live_daily_job_writes_content(tmp_path):
 
     class FakeClient:
         def fetch_ranking_html(self, url: str) -> str:
-            return ""
+            return '<h3><a href="/papers/2505.00001">Paper A</a></h3>'
 
         def fetch_metadata(self, ranking_lookup):
             return [paper]
@@ -170,7 +164,6 @@ def test_run_live_daily_job_writes_content(tmp_path):
     settings = Settings(
         CONTENT_ROOT=str(tmp_path),
         OPENAI_API_KEY="test-key",
-        ARXIV_RANKING_URL_TEMPLATE="https://example.com/{category}?date={date}",
     )
 
     count = run_live_daily_job(

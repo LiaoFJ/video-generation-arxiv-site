@@ -1,4 +1,5 @@
-from typing import Any
+from datetime import date, timedelta
+from typing import Any, Callable
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -8,13 +9,29 @@ from app.arxiv.models import RankedPaper
 ATOM_NS = {"atom": "http://www.w3.org/2005/Atom"}
 
 
-def build_ranking_url(category: str, traffic_date: str, template: str) -> str:
-    return template.format(category=category, date=traffic_date)
+def build_ranking_url(category: str, traffic_date: str, template: str | None) -> str:
+    if template:
+        return template.format(category=category, date=traffic_date)
+    return f"https://huggingface.co/papers?date={traffic_date}"
 
 
 def normalize_arxiv_id(value: str) -> str:
     raw = value.rstrip("/").split("/")[-1]
     return raw.split("v", 1)[0]
+
+
+def resolve_ranking_date(
+    requested_date: str,
+    fetch_html_for_date: Callable[[str], str],
+    max_backtrack_days: int = 3,
+) -> tuple[str, str]:
+    current_date = date.fromisoformat(requested_date)
+    for offset in range(max_backtrack_days + 1):
+        candidate = (current_date - timedelta(days=offset)).isoformat()
+        html = fetch_html_for_date(candidate)
+        if '/papers/' in html:
+            return candidate, html
+    raise ValueError(f"No ranking page with papers found within {max_backtrack_days} day(s) of {requested_date}.")
 
 
 def parse_arxiv_api_response(

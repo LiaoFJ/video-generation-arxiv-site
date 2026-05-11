@@ -1,4 +1,4 @@
-from app.arxiv.client import build_ranking_url, parse_arxiv_api_response
+from app.arxiv.client import build_ranking_url, parse_arxiv_api_response, resolve_ranking_date
 
 
 def test_build_ranking_url_supports_category_and_date_tokens():
@@ -9,6 +9,28 @@ def test_build_ranking_url_supports_category_and_date_tokens():
     )
 
     assert url == "https://example.com/cs.CV?date=2026-05-09"
+
+
+def test_build_ranking_url_defaults_to_huggingface_date_query():
+    url = build_ranking_url(category="cs.CV", traffic_date="2026-05-09", template=None)
+
+    assert url == "https://huggingface.co/papers?date=2026-05-09"
+
+
+def test_resolve_ranking_date_rolls_back_until_page_has_entries():
+    visited = []
+
+    def fetch_html(date_token: str) -> str:
+        visited.append(date_token)
+        if date_token in {"2026-05-10", "2026-05-11"}:
+            return "<html><body>No papers today</body></html>"
+        return '<h3><a href="/papers/2505.00001">Paper A</a></h3>'
+
+    resolved_date, html = resolve_ranking_date("2026-05-11", fetch_html, max_backtrack_days=3)
+
+    assert resolved_date == "2026-05-09"
+    assert '2505.00001' in html
+    assert visited == ["2026-05-11", "2026-05-10", "2026-05-09"]
 
 
 def test_parse_arxiv_api_response_enriches_ranked_papers():

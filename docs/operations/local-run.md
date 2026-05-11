@@ -11,13 +11,12 @@ Run `python scripts/run_daily.py`
 Required environment variables for the live pipeline:
 
 - `OPENAI_API_KEY`: OpenAI API key used for Chinese summaries
-- `ARXIV_RANKING_URL_TEMPLATE`: public ranking page template with `{category}` and `{date}` placeholders
+- `RANKING_URL_TEMPLATE`: optional override for the ranking page template. If omitted, the app uses `https://huggingface.co/papers?date={date}` by default.
 
 Example:
 
 ```powershell
 $env:OPENAI_API_KEY="sk-..."
-$env:ARXIV_RANKING_URL_TEMPLATE="https://example.com/{category}?date={date}"
 python scripts/run_daily.py
 ```
 
