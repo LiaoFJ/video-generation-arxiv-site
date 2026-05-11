@@ -119,7 +119,13 @@ def test_collect_ranked_papers_filters_and_dedupes():
         CONTENT_ROOT="content",
     )
 
-    papers = collect_ranked_papers(settings, FakeClient(), "2026-05-09")
+    papers = collect_ranked_papers(
+        settings,
+        FakeClient(),
+        "2026-05-09",
+        relevance_checker=lambda paper: True,
+        logger=lambda message: None,
+    )
 
     assert len(papers) == 1
     assert papers[0].arxiv_id == "2505.00001"
@@ -151,10 +157,69 @@ def test_collect_ranked_papers_does_not_filter_by_category():
 
             return parse_arxiv_api_response(xml_text, ranking_lookup)
 
-    papers = collect_ranked_papers(Settings(CONTENT_ROOT="content"), FakeClient(), "2026-05-09")
+    papers = collect_ranked_papers(
+        Settings(CONTENT_ROOT="content"),
+        FakeClient(),
+        "2026-05-09",
+        relevance_checker=lambda paper: True,
+        logger=lambda message: None,
+    )
 
     assert len(papers) == 1
     assert papers[0].categories == ["stat.ML"]
+
+
+def test_collect_ranked_papers_uses_model_relevance_checker_for_candidates():
+    html = """
+    <h3><a href="/papers/2505.00011">Paper Good</a></h3>
+    <h3><a href="/papers/2505.00012">Paper Bad</a></h3>
+    """
+    xml_text = """<?xml version="1.0" encoding="UTF-8"?>
+    <feed xmlns="http://www.w3.org/2005/Atom">
+      <entry>
+        <id>http://arxiv.org/abs/2505.00011v1</id>
+        <published>2026-05-08T00:00:00Z</published>
+        <title>Video Planning Paper</title>
+        <summary>video reasoning with generation components</summary>
+        <author><name>Ada</name></author>
+        <category term="cs.CV" />
+      </entry>
+      <entry>
+        <id>http://arxiv.org/abs/2505.00012v1</id>
+        <published>2026-05-08T00:00:00Z</published>
+        <title>Video Analytics Paper</title>
+        <summary>video analytics and tracking</summary>
+        <author><name>Bob</name></author>
+        <category term="cs.CV" />
+      </entry>
+    </feed>
+    """
+
+    class FakeClient:
+        def fetch_ranking_html(self, url: str) -> str:
+            return html
+
+        def fetch_metadata(self, ranking_lookup):
+            from app.arxiv.client import parse_arxiv_api_response
+
+            return parse_arxiv_api_response(xml_text, ranking_lookup)
+
+    calls = []
+
+    def checker(paper):
+        calls.append(paper.arxiv_id)
+        return paper.arxiv_id == "2505.00011"
+
+    papers = collect_ranked_papers(
+        Settings(CONTENT_ROOT="content", keywords=["video"]),
+        FakeClient(),
+        "2026-05-09",
+        relevance_checker=checker,
+        logger=lambda message: None,
+    )
+
+    assert [paper.arxiv_id for paper in papers] == ["2505.00011"]
+    assert calls == ["2505.00011", "2505.00012"]
 
 
 def test_run_live_daily_job_writes_content(tmp_path):
@@ -184,6 +249,9 @@ def test_run_live_daily_job_writes_content(tmp_path):
             return b"%PDF-1.4 fake"
 
     class FakeSummarizer:
+        def is_video_generation_paper(self, paper):
+            return True, "test stub"
+
         def summarize_paper(self, paper, pdf_text: str):
             return SummaryResult(
                 summary_zh="中文摘要",

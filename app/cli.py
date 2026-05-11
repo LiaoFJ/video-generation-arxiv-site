@@ -1,8 +1,8 @@
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from typing import Callable
 
 from app.arxiv.client import ArxivClient, build_ranking_url, resolve_ranking_date
-from app.arxiv.filtering import is_relevant_paper
 from app.arxiv.models import RankedPaper
 from app.arxiv.ranking_source import parse_ranking_html
 from app.config import Settings
@@ -29,7 +29,20 @@ def build_slug(arxiv_id: str) -> str:
     return arxiv_id.replace(".", "-")
 
 
-def collect_ranked_papers(settings: Settings, arxiv_client: ArxivClient, traffic_date: str) -> list[RankedPaper]:
+def is_broad_candidate(paper: RankedPaper, keywords: list[str]) -> bool:
+    broad_terms = {keyword.lower() for keyword in keywords}
+    broad_terms.update({"video", "video generation", "video synthesis", "video editing", "video-to-video"})
+    haystack = f"{paper.title}\n{paper.summary}".lower()
+    return any(term in haystack for term in broad_terms if term)
+
+
+def collect_ranked_papers(
+    settings: Settings,
+    arxiv_client: ArxivClient,
+    traffic_date: str,
+    relevance_checker: Callable[[RankedPaper], bool | tuple[bool, str]] | None = None,
+    logger: Callable[[str], None] = lambda _message: None,
+) -> list[RankedPaper]:
     ranking_lookup: dict[str, dict] = {}
     template = settings.ranking_url_template
     resolved_traffic_date, html = resolve_ranking_date(
@@ -49,7 +62,29 @@ def collect_ranked_papers(settings: Settings, arxiv_client: ArxivClient, traffic
         }
 
     metadata_papers = arxiv_client.fetch_metadata(ranking_lookup)
-    filtered_papers = [paper for paper in metadata_papers if is_relevant_paper(paper, settings.keywords)]
+    logger(f"Using ranking date: {resolved_traffic_date}")
+    logger(f"Fetched {len(metadata_papers)} paper(s) from ranking source:")
+    for paper in metadata_papers:
+        logger(f"  [{paper.view_rank}] {paper.title}")
+
+    candidate_papers = [paper for paper in metadata_papers if is_broad_candidate(paper, settings.keywords)]
+    logger(f"Keyword candidate count: {len(candidate_papers)}")
+
+    if relevance_checker is None:
+        return candidate_papers
+
+    filtered_papers: list[RankedPaper] = []
+    for paper in candidate_papers:
+        verdict = relevance_checker(paper)
+        if isinstance(verdict, tuple):
+            keep, reason = verdict
+        else:
+            keep, reason = bool(verdict), ""
+        logger(f"  Model judge [{paper.view_rank}] keep={keep} title={paper.title} reason={reason}")
+        if keep:
+            filtered_papers.append(paper)
+
+    logger(f"Final matched count with model judge: {len(filtered_papers)}")
     return filtered_papers
 
 
@@ -74,7 +109,13 @@ def run_live_daily_job(
     resolved_archive_date = archive_date or datetime.now(UTC).date().isoformat()
     resolved_traffic_date = traffic_date or default_traffic_date()
 
-    ranked_papers = collect_ranked_papers(settings, client, resolved_traffic_date)
+    ranked_papers = collect_ranked_papers(
+        settings,
+        client,
+        resolved_traffic_date,
+        relevance_checker=summarizer_client.is_video_generation_paper,
+        logger=print,
+    )
     selected_papers = build_publish_plan(ranked_papers, settings.publish_limit)
     content_root = Path(settings.content_root)
 
