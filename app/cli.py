@@ -35,7 +35,7 @@ def collect_ranked_papers(settings: Settings, arxiv_client: ArxivClient, traffic
     resolved_traffic_date, html = resolve_ranking_date(
         traffic_date,
         lambda candidate_date: arxiv_client.fetch_ranking_html(
-            build_ranking_url(category=settings.categories[0], traffic_date=candidate_date, template=template)
+            build_ranking_url(category="", traffic_date=candidate_date, template=template)
         ),
         max_backtrack_days=3,
     )
@@ -49,12 +49,7 @@ def collect_ranked_papers(settings: Settings, arxiv_client: ArxivClient, traffic
         }
 
     metadata_papers = arxiv_client.fetch_metadata(ranking_lookup)
-    filtered_papers = [
-        paper
-        for paper in metadata_papers
-        if any(category in settings.categories for category in paper.categories)
-        and is_relevant_paper(paper, settings.keywords)
-    ]
+    filtered_papers = [paper for paper in metadata_papers if is_relevant_paper(paper, settings.keywords)]
     return filtered_papers
 
 

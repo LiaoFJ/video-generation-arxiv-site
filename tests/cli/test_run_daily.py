@@ -125,6 +125,38 @@ def test_collect_ranked_papers_filters_and_dedupes():
     assert papers[0].arxiv_id == "2505.00001"
 
 
+def test_collect_ranked_papers_does_not_filter_by_category():
+    html = """
+    <h3><a href="/papers/2505.00009">Paper X</a></h3>
+    """
+    xml_text = """<?xml version="1.0" encoding="UTF-8"?>
+    <feed xmlns="http://www.w3.org/2005/Atom">
+      <entry>
+        <id>http://arxiv.org/abs/2505.00009v1</id>
+        <published>2026-05-08T00:00:00Z</published>
+        <title>Paper X</title>
+        <summary>text-to-video generation</summary>
+        <author><name>Ada</name></author>
+        <category term="stat.ML" />
+      </entry>
+    </feed>
+    """
+
+    class FakeClient:
+        def fetch_ranking_html(self, url: str) -> str:
+            return html
+
+        def fetch_metadata(self, ranking_lookup):
+            from app.arxiv.client import parse_arxiv_api_response
+
+            return parse_arxiv_api_response(xml_text, ranking_lookup)
+
+    papers = collect_ranked_papers(Settings(CONTENT_ROOT="content"), FakeClient(), "2026-05-09")
+
+    assert len(papers) == 1
+    assert papers[0].categories == ["stat.ML"]
+
+
 def test_run_live_daily_job_writes_content(tmp_path):
     paper = RankedPaper(
         arxiv_id="2505.00001",

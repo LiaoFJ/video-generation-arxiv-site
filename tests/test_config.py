@@ -9,7 +9,6 @@ def test_settings_defaults(tmp_path, monkeypatch):
     assert settings.port == 8000
     assert settings.content_root == str(tmp_path / "content")
     assert settings.publish_limit == 5
-    assert settings.categories == ["cs.CV", "cs.AI", "cs.LG"]
     assert settings.keywords == [
         "video generation",
         "text-to-video",
