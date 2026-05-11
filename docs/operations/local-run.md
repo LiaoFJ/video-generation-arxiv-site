@@ -10,7 +10,7 @@ Run `python scripts/run_daily.py`
 
 Required environment variables for the live pipeline:
 
-- `OPENAI_API_KEY`: OpenAI API key used for Chinese summaries
+- `OPENAI_API_KEY`: provider API key used for Chinese summaries. The current default setup targets a DeepSeek-compatible endpoint.
 - `RANKING_URL_TEMPLATE`: optional override for the ranking page template. If omitted, the app uses `https://huggingface.co/papers?date={date}` by default.
 
 Example:
@@ -26,4 +26,4 @@ If `pytest` hits a temp-directory permission error on Windows, set `TMP` and `TE
 
 ## Windows Task Scheduler
 
-Schedule `python scripts/run_daily.py` once per day after the expected arXiv traffic data is available.
+The local machine is configured to run the daily publish job at `10:00` every morning using the task name `VideoGenerationArxivDaily`.

@@ -2,7 +2,41 @@
 {% block content %}
 <article>
   <h1>{{ paper.title }}</h1>
+  <p><a href="{{ paper.source_url }}" target="_blank" rel="noreferrer">原文链接</a></p>
+  <p><a href="{{ paper.pdf_url }}" target="_blank" rel="noreferrer">PDF 链接</a></p>
   <p>{{ paper.summary_zh }}</p>
   <p>{{ paper.one_sentence_takeaway }}</p>
+  <section>
+    <h2>文章痛点</h2>
+    <p>{{ paper.problem_statement_zh }}</p>
+  </section>
+  <section>
+    <h2>核心设计</h2>
+    <p>{{ paper.core_design_zh }}</p>
+  </section>
+  <section>
+    <h2>方法亮点</h2>
+    <ul>
+      {% for item in paper.method_highlights %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section>
+    <h2>潜在应用</h2>
+    <ul>
+      {% for item in paper.applications %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section>
+    <h2>局限性</h2>
+    <ul>
+      {% for item in paper.limitations %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
 </article>
 {% endblock %}

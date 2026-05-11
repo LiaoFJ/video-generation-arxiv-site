@@ -17,6 +17,7 @@ def publish_paper(content_root: Path, archive_date: str, paper: dict, summary: S
     else:
         index_payload = []
 
+    index_payload = [item for item in index_payload if item.get("slug") != paper["slug"]]
     index_payload.append(
         {
             "slug": paper["slug"],

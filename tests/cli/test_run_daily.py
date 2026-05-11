@@ -256,6 +256,8 @@ def test_run_live_daily_job_writes_content(tmp_path):
             return SummaryResult(
                 summary_zh="中文摘要",
                 one_sentence_takeaway="一句话结论",
+                problem_statement_zh="现有视频生成方法在时序一致性上存在明显问题。",
+                core_design_zh="论文通过显式的时序模块和条件控制来稳定生成过程。",
                 method_highlights=["亮点"],
                 applications=["应用"],
                 limitations=["局限"],
@@ -278,3 +280,4 @@ def test_run_live_daily_job_writes_content(tmp_path):
     detail = json.loads((tmp_path / "2026-05-10" / "2505-00001.json").read_text(encoding="utf-8"))
     assert count == 1
     assert detail["summary_zh"] == "中文摘要"
+    assert detail["problem_statement_zh"].startswith("现有视频生成方法")

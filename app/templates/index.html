@@ -3,9 +3,10 @@
 <h1>最新发布</h1>
 {% for entry in entries %}
 <article>
-  <h2>{{ entry.title }}</h2>
+  <h2><a href="/papers/{{ entry.archived_at }}/{{ entry.slug }}">{{ entry.title }}</a></h2>
   <p>{{ entry.one_sentence_takeaway }}</p>
   <p>{{ entry.traffic_date }} / Rank {{ entry.view_rank }}</p>
+  <p><a href="{{ entry.source_url }}" target="_blank" rel="noreferrer">原文链接</a></p>
 </article>
 {% endfor %}
 {% endblock %}

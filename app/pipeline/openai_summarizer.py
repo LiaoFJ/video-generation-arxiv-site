@@ -65,8 +65,8 @@ class OpenAIResponsesSummarizer:
         payload = self._create_json_response(
             system_text=(
                 "你是一名科研编辑。请阅读用户提供的论文信息，并只输出 JSON。"
-                "JSON 必须包含 summary_zh、one_sentence_takeaway、"
-                "method_highlights、applications、limitations 这五个字段。"
+                "JSON 必须包含 summary_zh、one_sentence_takeaway、problem_statement_zh、core_design_zh、"
+                "method_highlights、applications、limitations 这七个字段。"
             ),
             user_text=self._build_summary_prompt(paper, pdf_text),
         )
@@ -133,7 +133,7 @@ class OpenAIResponsesSummarizer:
     def _build_summary_prompt(self, paper: RankedPaper, pdf_text: str) -> str:
         truncated_text = pdf_text[:40000]
         return (
-            "请根据以下论文内容生成结构化中文整理，并仅输出 json 对象。\n"
+            "请根据以下论文内容生成结构化中文整理，并仅输出 JSON 对象。\n"
             f"标题: {paper.title}\n"
             f"arXiv ID: {paper.arxiv_id}\n"
             f"分类: {', '.join(paper.categories)}\n"
@@ -143,8 +143,10 @@ class OpenAIResponsesSummarizer:
             "输出要求:\n"
             "1. summary_zh: 2-4 句中文摘要\n"
             "2. one_sentence_takeaway: 1 句中文结论\n"
-            "3. method_highlights: 2-4 条中文要点数组\n"
-            "4. applications: 1-3 条潜在应用数组\n"
-            "5. limitations: 1-3 条局限性数组\n"
+            "3. problem_statement_zh: 2-3 句中文说明文章要解决的核心痛点，以及现有方法缺什么\n"
+            "4. core_design_zh: 2-3 句中文说明文章围绕这个痛点做了什么设计，整体思路是什么\n"
+            "5. method_highlights: 2-4 条中文要点数组\n"
+            "6. applications: 1-3 条潜在应用数组\n"
+            "7. limitations: 1-3 条局限性数组\n"
             "请只输出 JSON 对象。"
         )

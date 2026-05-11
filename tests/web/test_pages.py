@@ -24,6 +24,8 @@ def test_index_page_renders_published_paper(tmp_path):
                 "view_count": 1234,
                 "summary_zh": "中文摘要",
                 "one_sentence_takeaway": "一句话结论",
+                "problem_statement_zh": "现有视频生成方法在时序一致性上存在明显问题。",
+                "core_design_zh": "论文通过显式的时序模块和条件控制来稳定生成过程。",
                 "method_highlights": ["亮点 A"],
                 "applications": ["应用 A"],
                 "limitations": ["局限 A"],
@@ -61,6 +63,7 @@ def test_index_page_renders_published_paper(tmp_path):
     assert response.status_code == 200
     assert "Paper A" in response.text
     assert "2026-05-09" in response.text
+    assert "https://arxiv.org/abs/2505.00001" in response.text
 
     archive_response = client.get("/archive/2026-05-10")
     assert archive_response.status_code == 200
@@ -69,3 +72,6 @@ def test_index_page_renders_published_paper(tmp_path):
     detail_response = client.get("/papers/2026-05-10/2505-00001")
     assert detail_response.status_code == 200
     assert "中文摘要" in detail_response.text
+    assert "现有视频生成方法在时序一致性上存在明显问题。" in detail_response.text
+    assert "论文通过显式的时序模块和条件控制来稳定生成过程。" in detail_response.text
+    assert "https://arxiv.org/abs/2505.00001" in detail_response.text
