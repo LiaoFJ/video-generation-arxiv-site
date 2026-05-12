@@ -1,4 +1,6 @@
 @echo off
 setlocal
 cd /d "%~dp0.."
-python scripts\run_daily.py
+set "PYTHON_EXE=%USERPROFILE%\miniconda3\python.exe"
+if not exist "%PYTHON_EXE%" set "PYTHON_EXE=python"
+"%PYTHON_EXE%" scripts\run_daily.py
