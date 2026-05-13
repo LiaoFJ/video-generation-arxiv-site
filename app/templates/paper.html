@@ -1,42 +1,67 @@
 {% extends "base.html" %}
+{% block title %}{{ paper.title }} | Video Generation Daily Brief{% endblock %}
 {% block content %}
-<article>
-  <h1>{{ paper.title }}</h1>
-  <p><a href="{{ paper.source_url }}" target="_blank" rel="noreferrer">原文链接</a></p>
-  <p><a href="{{ paper.pdf_url }}" target="_blank" rel="noreferrer">PDF 链接</a></p>
-  <p>{{ paper.summary_zh }}</p>
-  <p>{{ paper.one_sentence_takeaway }}</p>
-  <section>
-    <h2>文章痛点</h2>
-    <p>{{ paper.problem_statement_zh }}</p>
-  </section>
-  <section>
-    <h2>核心设计</h2>
-    <p>{{ paper.core_design_zh }}</p>
-  </section>
-  <section>
-    <h2>方法亮点</h2>
-    <ul>
-      {% for item in paper.method_highlights %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </section>
-  <section>
-    <h2>潜在应用</h2>
-    <ul>
-      {% for item in paper.applications %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </section>
-  <section>
-    <h2>局限性</h2>
-    <ul>
-      {% for item in paper.limitations %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </section>
-</article>
+<div class="article-shell">
+  <article class="panel article-card">
+    <p class="eyebrow">Paper Brief</p>
+    <h1>{{ paper.title }}</h1>
+    <div class="paper-meta">
+      <span class="chip">归档 {{ paper.archived_at }}</span>
+      <span class="chip">榜单日期 {{ paper.traffic_date }}</span>
+      <span class="chip">Rank {{ paper.view_rank }}</span>
+    </div>
+    <div class="links">
+      <a class="inline-link" href="{{ paper.source_url }}" target="_blank" rel="noreferrer">原文链接</a>
+      <a class="inline-link" href="{{ paper.pdf_url }}" target="_blank" rel="noreferrer">PDF 链接</a>
+      <a class="inline-link" href="/archive/{{ paper.archived_at }}">返回归档</a>
+    </div>
+
+    <section>
+      <h2>中文摘要</h2>
+      <p>{{ paper.summary_zh }}</p>
+    </section>
+
+    <section>
+      <h2>一句话结论</h2>
+      <p>{{ paper.one_sentence_takeaway }}</p>
+    </section>
+
+    <section>
+      <h2>文章痛点</h2>
+      <p>{{ paper.problem_statement_zh }}</p>
+    </section>
+
+    <section>
+      <h2>核心设计</h2>
+      <p>{{ paper.core_design_zh }}</p>
+    </section>
+
+    <section>
+      <h2>方法亮点</h2>
+      <ul>
+        {% for item in paper.method_highlights %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>潜在应用</h2>
+      <ul>
+        {% for item in paper.applications %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>局限性</h2>
+      <ul>
+        {% for item in paper.limitations %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </article>
+</div>
 {% endblock %}

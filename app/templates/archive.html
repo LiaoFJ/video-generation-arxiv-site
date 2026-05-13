@@ -1,12 +1,30 @@
 {% extends "base.html" %}
+{% block title %}归档 {{ archive_date }} | Video Generation Daily Brief{% endblock %}
 {% block content %}
-<h1>{{ archive_date }}</h1>
-{% for entry in entries %}
-<article>
-  <h2><a href="/papers/{{ archive_date }}/{{ entry.slug }}">{{ entry.title }}</a></h2>
-  <p>{{ entry.one_sentence_takeaway }}</p>
-  <p>{{ entry.traffic_date }} / Rank {{ entry.view_rank }}</p>
-  <p><a href="{{ entry.source_url }}" target="_blank" rel="noreferrer">原文链接</a></p>
-</article>
-{% endfor %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Archive</p>
+      <h1 class="panel-title">归档 {{ archive_date }}</h1>
+      <p class="panel-subtitle">这一天收录的论文整理，适合按日期回看。</p>
+    </div>
+    <a class="button secondary" href="/">返回首页</a>
+  </div>
+  <div class="paper-list">
+    {% for entry in entries %}
+    <article class="paper-card">
+      <h2><a href="/papers/{{ archive_date }}/{{ entry.slug }}">{{ entry.title }}</a></h2>
+      <p>{{ entry.one_sentence_takeaway }}</p>
+      <div class="paper-meta">
+        <span class="chip">榜单日期 {{ entry.traffic_date }}</span>
+        <span class="chip">Rank {{ entry.view_rank }}</span>
+      </div>
+      <div class="links">
+        <a class="inline-link" href="/papers/{{ archive_date }}/{{ entry.slug }}">查看整理</a>
+        <a class="inline-link" href="{{ entry.source_url }}" target="_blank" rel="noreferrer">原文链接</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}

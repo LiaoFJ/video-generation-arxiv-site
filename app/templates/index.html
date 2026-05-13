@@ -1,12 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>最新发布</h1>
-{% for entry in entries %}
-<article>
-  <h2><a href="/papers/{{ entry.archived_at }}/{{ entry.slug }}">{{ entry.title }}</a></h2>
-  <p>{{ entry.one_sentence_takeaway }}</p>
-  <p>{{ entry.traffic_date }} / Rank {{ entry.view_rank }}</p>
-  <p><a href="{{ entry.source_url }}" target="_blank" rel="noreferrer">原文链接</a></p>
-</article>
-{% endfor %}
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">Research Radar</p>
+      <h1>每日精选 Video Generation 论文日报</h1>
+      <p>从热门论文榜单中抓取候选内容，自动阅读 PDF 正文并生成中文整理。你看到的是按时间归档、适合快速浏览和回看的本地研究简报。</p>
+    </div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">最近归档</div>
+        <div class="stat-value">{{ latest_archive_date or "暂无" }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">当前收录</div>
+        <div class="stat-value">{{ entry_count }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日焦点</div>
+        <div class="stat-value">{% if featured_entry %}Rank {{ featured_entry.view_rank }}{% else %}-{% endif %}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">访问方式</div>
+        <div class="stat-value">本地受保护</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content-grid">
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <h2 class="panel-title">最新发布</h2>
+        <p class="panel-subtitle">按归档日期倒序展示，每篇卡片都能直接跳到原文与详情页。</p>
+      </div>
+      {% if latest_archive_date %}
+      <a class="button secondary" href="/archive/{{ latest_archive_date }}">查看最近归档</a>
+      {% endif %}
+    </div>
+    <div class="paper-list">
+      {% for entry in entries %}
+      <article class="paper-card">
+        <h2><a href="/papers/{{ entry.archived_at }}/{{ entry.slug }}">{{ entry.title }}</a></h2>
+        <p>{{ entry.one_sentence_takeaway }}</p>
+        <div class="paper-meta">
+          <span class="chip">归档 {{ entry.archived_at }}</span>
+          <span class="chip">榜单日期 {{ entry.traffic_date }}</span>
+          <span class="chip">Rank {{ entry.view_rank }}</span>
+        </div>
+        <div class="links">
+          <a class="inline-link" href="/papers/{{ entry.archived_at }}/{{ entry.slug }}">查看整理</a>
+          <a class="inline-link" href="{{ entry.source_url }}" target="_blank" rel="noreferrer">原文链接</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <section class="panel sidebar-block">
+      <h3>站点说明</h3>
+      <p>这个站点会从热门论文榜单里抓取和 video generation 相关的论文，读取 PDF 正文后生成中文整理，并按日期归档保存。</p>
+    </section>
+    <section class="panel sidebar-block">
+      <h3>阅读建议</h3>
+      <ul>
+        <li>先看一句话结论，快速判断是否值得细读。</li>
+        <li>再看“文章痛点”和“核心设计”，更快把握论文中心。</li>
+        <li>需要核对细节时，直接点原文链接回到 arXiv。</li>
+      </ul>
+    </section>
+  </aside>
+</section>
 {% endblock %}

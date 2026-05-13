@@ -4,6 +4,11 @@
 
 Run `uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`
 
+The website now requires login. Configure the local single-user credentials in `.env`:
+
+- `APP_USERNAME`
+- `APP_PASSWORD`
+
 ## Run the daily publish job
 
 Run `python scripts/run_daily.py`
@@ -11,6 +16,8 @@ Run `python scripts/run_daily.py`
 Required environment variables for the live pipeline:
 
 - `OPENAI_API_KEY`: provider API key used for Chinese summaries. The current default setup targets a DeepSeek-compatible endpoint.
+- `APP_USERNAME`: local site login username
+- `APP_PASSWORD`: local site login password
 - `RANKING_URL_TEMPLATE`: optional override for the ranking page template. If omitted, the app uses `https://huggingface.co/papers?date={date}` by default.
 
 Example:

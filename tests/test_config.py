@@ -17,3 +17,10 @@ def test_settings_defaults(tmp_path, monkeypatch):
     ]
     assert settings.openai_base_url == "https://api.deepseek.com"
     assert settings.openai_model == "deepseek-v4-flash"
+
+
+def test_settings_accept_app_credentials():
+    settings = Settings(APP_USERNAME="admin", APP_PASSWORD="secret-pass")
+
+    assert settings.app_username == "admin"
+    assert settings.app_password == "secret-pass"

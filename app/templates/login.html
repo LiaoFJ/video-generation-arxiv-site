@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}登录 | Video Generation Daily Brief{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <section class="panel login-card">
+    <p class="eyebrow">Local Access</p>
+    <h1>登录研究日报</h1>
+    <p>这是本地单用户站点。输入 `.env` 中配置的账号和密码后，才能查看论文日报与归档内容。</p>
+    {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <div class="field">
+        <label for="username">用户名</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <button type="submit">登录</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
